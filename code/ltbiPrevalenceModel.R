@@ -5,9 +5,10 @@
 
 ### Make sure to load all dependencies, helper functions, and color palette and
 ### set working directory by first running the setupEnvironAndDeps.R file!
-
 ###############################################################################
+setwd("~/TTTAsianHispDiabetes/LTBITestAndTreatAsianHispDiabetes/")
 
+source("code/setupEnvironAndDeps.R")
 ###############################################################################
 ###### Regression to estimate IGRA+ fraction from NHANES 2011-2012 data
 ###### Covariates include: age, nativity, race, and diabetes status

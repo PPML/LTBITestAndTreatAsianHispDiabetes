@@ -1,11 +1,18 @@
+### Make sure to load all dependencies, helper functions, and color palette and
+### set working directory by first running the setupEnvironAndDeps.R file!
+###############################################################################
 setwd("~/TTTAsianHispDiabetes/LTBITestAndTreatAsianHispDiabetes/")
 
+source("code/setupEnvironAndDeps.R")
+
+### Load in the LTBI prevalence estimates
+###############################################################################
 load("data/ltbi_prev_par_diab_Aug_29_2024.rData")
 
 ltbiPrev <- ltbi_prev_par_diab %>% mutate("Diabetes status" = ifelse(Diabetes2 == "Yes", "Diabetes", "None"),
                                           "97.5%" = ci_hi,
                                           "2.5%" =  ci_lo) %>%
-  filter(Race.ethnicity != "Other") %>% rename(`Race-ethnicity` = Race.ethnicity,
+  filter(Race.ethnicity != "Other") %>% dplyr::rename(`Race-ethnicity` = Race.ethnicity,
                                                `Age group` = Age.group,
                                                `50%` = mean)
 
@@ -27,15 +34,15 @@ diabCompPLot <-ggplot(data=ltbiPrev %>%
         legend.position = "bottom") +
   xlab("LTBI prevalence")
 
-# ggsave(filename = "~/Documents/TTT & Diabetes/Plots/LTBIPrevalenceDiabComp11_12_fixedA1c.png",
-#        plot = diabCompPLot, width = 8.5, height = 9, units = "in")
+ggsave(filename = "~/TTTAsianHispDiabetes/LTBIPrevalenceDiabComp11_12_bayesian.png",
+       plot = diabCompPLot, width = 8.5, height = 9, units = "in")
 
 
 ###############################################################################
 ##### Population estimates
 ###############################################################################
 ### Read in the ACS population estimates
-pop <- readRDS("~/Documents/TTT & Diabetes/Data/ACS_Pop_Asian_Hisp_AgeGrp.rds")
+pop <- readRDS("data/ACS_Pop_Asian_Hisp_AgeGrp.rds")
 asianPop <- pop[[1]]
 hispanicPop <- pop[[2]]
 
@@ -168,5 +175,5 @@ rateRatios$`Race-ethnicity` <- rep(c("non-Hispanic Asian", "Hispanic"), each = 2
 
 ##### Save for use in the MITUS code
 saveRDS(rateRatios,
-        file = "~/Documents/TTT & Diabetes/Data/rateRatiosLTBI.rds",
+        file = "data/rateRatiosLTBI.rds",
         version = 2)
