@@ -17,7 +17,7 @@ model_load()
 ###############################################################################
 ##### Total population
 ##### Read in the total population estimates from the ACS
-pop <- readRDS("~/Documents/TTT & Diabetes/Data/ACS_Pop_Asian_Hisp_AgeGrp.rds")
+pop <- readRDS("data/ACS_Pop_Asian_Hisp_AgeGrp.rds")
 asianPop <- pop[[1]]
 asianNatTotPop <- asianPop %>% group_by(Nativity) %>% reframe(Population = sum(Population))
 hispanicPop <- pop[[2]]
@@ -25,7 +25,8 @@ hispanicNatTotPop <- hispanicPop %>% group_by(Nativity) %>% reframe(Population =
 
 ##### Population with diabetes
 ##### Read in the diabetes population estimates
-diabPops <- readRDS(file = "~/Documents/TTT & Diabetes/Data/diabetesPopulations.rds")
+diabPops <- readRDS(file = "data/diabetesPopulations.rds")
+
 asianDiabPop <- diabPops[[1]] %>%
   dplyr::select(`Age group`, Nativity, `Race-ethnicity`,
                 `Population with diabetes`, `Lower bound`, `Upper bound`)
@@ -48,7 +49,7 @@ diabMortRR <- 1.9
 ##### individuals. Example Asian USB have XXX times LTBI prevalence than all
 ##### USB individuals.
 ##### Read in the age standardized rate ratios from ltbiPrevalenceModel.R script
-ltbiRateRatios <- readRDS("~/Documents/TTT & Diabetes/Data/rateRatiosLTBI.rds")
+ltbiRateRatios <- readRDS("data/rateRatiosLTBI.rds")
 ##### Total population
 usbAsianLtbiRR <- 1
 nusbAsianLtbiRR <- 1
@@ -126,7 +127,7 @@ usbAsianDiabTTT[["RRprg"]] <- diabProgressionRR
 usbAsianDiabTTT[["RRmu"]] <- diabMortRR
 usbAsianDiabTTT[["RRPrev"]] <- usbAsianDiabLtbiRR
 
-# saveRDS(usbAsianDiabTTT, "~/Documents/TTT & Diabetes/Inputs/usbAsianDiabInputs.rds", version = 2)
+saveRDS(usbAsianDiabTTT, "inputs/usbAsianDiabInputs.rds", version = 2)
 
 ##### non-U.S.-born non-Hispanic Asian population (with diabetes)
 nusbAsianDiabTTT <- def_ttt_nat_ag()
@@ -163,7 +164,7 @@ nusbAsianDiabTTT[["RRprg"]] <- diabProgressionRR
 nusbAsianDiabTTT[["RRmu"]] <- diabMortRR
 nusbAsianDiabTTT[["RRPrev"]] <- nusbAsianDiabLtbiRR
 
-saveRDS(nusbAsianDiabTTT, "~/Documents/TTT & Diabetes/Inputs/nusbAsianDiabInputs.rds", version = 2)
+saveRDS(nusbAsianDiabTTT, "inputs/nusbAsianDiabInputs.rds", version = 2)
 
 
 ##### U.S.-born Hispanic population (with diabetes)
@@ -202,7 +203,7 @@ usbHispanicDiabTTT[["RRprg"]] <- diabProgressionRR
 usbHispanicDiabTTT[["RRmu"]] <- diabMortRR
 usbHispanicDiabTTT[["RRPrev"]] <- usbHispanicDiabLtbiRR
 
-saveRDS(usbHispanicDiabTTT, "~/Documents/TTT & Diabetes/Inputs/usbHispanicDiabInputs.rds", version = 2)
+saveRDS(usbHispanicDiabTTT, "inputs/usbHispanicDiabInputs.rds", version = 2)
 
 ##### non-U.S.-born Hispanic population (with diabetes)
 nusbHispanicDiabTTT <- def_ttt_nat_ag()
@@ -240,7 +241,7 @@ nusbHispanicDiabTTT[["RRprg"]] <- diabProgressionRR
 nusbHispanicDiabTTT[["RRmu"]] <- diabMortRR
 nusbHispanicDiabTTT[["RRPrev"]] <- nusbHispanicDiabLtbiRR
 
-saveRDS(nusbHispanicDiabTTT, "~/Documents/TTT & Diabetes/Inputs/nusbHispanicDiabInputs.rds", version = 2)
+saveRDS(nusbHispanicDiabTTT, "inputs/nusbHispanicDiabInputs.rds", version = 2)
 ###############################################################################
 ##### Run the MITUS model
 ###############################################################################

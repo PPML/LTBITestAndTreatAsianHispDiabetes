@@ -17,21 +17,24 @@ library(tidyverse)
 library(TubercuCost)
 
 ##### Source in ICER function
+setwd("~/TTTAsianHispDiabetes/LTBITestAndTreatAsianHispDiabetes/")
+source("code/setupEnvironAndDeps.R")
 source("code/calculateICERs.R")
+
 
 ##### load in model data
 model_load()
 
 ##### Set up palette for plots
 pal <- c("#A51C30", "#306298", "#946eb7", "#fcb315", "#117733", "#ec8f9c")
-gradientPal <- c("#A51C30", "#306298", "#D28E98", "#9badca")
+gradientPal <- c("#A51C30","#306298", "#D28E98", "#9badca")
 
 ##############################################################################|
 #####                           Population data                      #########
 ##############################################################################|
 ##### Total population
 ##### Read in the total population estimates from the ACS
-pop <- readRDS("~/Documents/TTT & Diabetes/Data/ACS_Pop_Asian_Hisp_AgeGrp.rds")
+pop <- readRDS("data/ACS_Pop_Asian_Hisp_AgeGrp.rds")
 asianPop <- pop[[1]]
 asianNatTotPop <- asianPop %>% group_by(Nativity) %>% reframe(Population = sum(Population))
 hispanicPop <- pop[[2]]
@@ -39,7 +42,7 @@ hispanicNatTotPop <- hispanicPop %>% group_by(Nativity) %>% reframe(Population =
 
 ##### Population with diabetes
 ##### Read in the diabetes population estimates
-diabPops <- readRDS(file = "~/Documents/TTT & Diabetes/Data/diabetesPopulations.rds")
+diabPops <- readRDS(file = "data/diabetesPopulations.rds")
 asianDiabPop <- diabPops[[1]] %>%
   dplyr::select(`Age group`, Nativity, `Race-ethnicity`,
                 `Population with diabetes`, `Lower bound`, `Upper bound`)
@@ -62,7 +65,7 @@ diabMortRR <- 1.9
 ##### individuals. Example Asian USB have XXX times LTBI prevalence than all
 ##### USB individuals.
 ##### Read in the age standardized rate ratios from ltbiPrevalenceModel.R script
-ltbiRateRatios <- readRDS("~/Documents/TTT & Diabetes/Data/rateRatiosLTBI.rds")
+ltbiRateRatios <- readRDS("data/rateRatiosLTBI.rds")
 ##### Total population
 usbAsianLtbiRR <- 1
 nusbAsianLtbiRR <- 1
@@ -104,7 +107,7 @@ careCascadeMatrix["ttt_ltbi_sens_NUS",] <- c(0.79, 0.70,0.90)
 careCascadeMatrix["ttt_ltbi_spec_US",] <- c(0.98, 0.96, 0.99)
 careCascadeMatrix["ttt_ltbi_spec_NUS",] <- c(0.99, 0.96, 1.00)
 
-careCascadeMatrix["ttt_ltbi_comp",] <- c(0.87, 0.84, 0.90)
+careCascadeMatrix["ttt_ltbi_comp",] <- c(0.76, 0.57, 0.95)
 careCascadeMatrix["ttt_ltbi_eff",]  <- c(0.93, 0.90, 0.96)
 
 ##############################################################################|
@@ -291,7 +294,7 @@ for (pop.i in populationVector){
                                           care_cascade = diabCareCascade,
                                           ttt_list = list(popParamList), endyr = 2099)
 
-  tbICERs[["Main"]] <- generateICER(tempResSA[["Main"]] - baselineRes,
+  tbICERs[["Main"]] <- generateICER((tempResSA[["Main"]] - baselineRes),
                                     UnitCosts = unitCostsMain,
                                     utilityWeights = utilityWeightsMain)
 
@@ -303,7 +306,7 @@ for (pop.i in populationVector){
                                                     ttt_list = list(popParamList), endyr = 2099)
 
   ### Calculate economic outcomes
-  tbICERs[["CompHigh"]] <- generateICER(tempResSA[["CompHigh"]] - baselineRes,
+  tbICERs[["CompHigh"]] <- generateICER(baselineRes - tempResSA[["CompHigh"]],
                                         UnitCosts = unitCostsMain,
                                         utilityWeights = utilityWeightsMain)
 
@@ -314,7 +317,7 @@ for (pop.i in populationVector){
                                                         care_cascade = diabCareCascade,
                                                         ttt_list = list(popParamList), endyr = 2099)
   ### Calculate economic outcomes
-  tbICERs[["CompLow"]] <- generateICER(tempResSA[["CompLow"]] - baselineRes,
+  tbICERs[["CompLow"]] <- generateICER(baselineRes - tempResSA[["CompLow"]],
                                        UnitCosts = unitCostsMain,
                                        utilityWeights = utilityWeightsMain)
 
@@ -328,17 +331,18 @@ for (pop.i in populationVector){
                                                        care_cascade = diabCareCascade,
                                                        ttt_list = list(popParamList), endyr = 2099)
   ### Calculate economic outcomes
-  tbICERs[["InitHigh"]] <- generateICER(tempResSA[["InitHigh"]] - baselineRes,
+  tbICERs[["InitHigh"]] <- generateICER(baselineRes - tempResSA[["InitHigh"]],
                                         UnitCosts = unitCostsMain,
                                         utilityWeights = utilityWeightsMain)
 
   diabCareCascade["ttt_ltbi_init"] <- careCascadeMatrix["ttt_ltbi_init", "LB"]
+
   tempResSA[["InitLow"]]<- national_OutputsZint(samp_i = 1, ParMatrix = Par, loc = "US",
                                                        prg_chng = diabPrgChng,
                                                        care_cascade = diabCareCascade,
                                                        ttt_list = list(popParamList), endyr = 2099)
   ### Calculate economic outcomes
-  tbICERs[["InitLow"]] <- generateICER(tempResSA[["InitLow"]]  - baselineRes,
+  tbICERs[["InitLow"]] <- generateICER(baselineRes - tempResSA[["InitLow"]],
                                        UnitCosts = unitCostsMain,
                                        utilityWeights = utilityWeightsMain)
 
@@ -352,7 +356,7 @@ for (pop.i in populationVector){
                                                         care_cascade = diabCareCascade,
                                                         ttt_list = list(popParamList), endyr = 2099)
   ### Calculate economic outcomes
-  tbICERs[["EffHigh"]] <- generateICER(tempResSA[["EffHigh"]]  - baselineRes,
+  tbICERs[["EffHigh"]] <- generateICER( baselineRes -tempResSA[["EffHigh"]] ,
                                        UnitCosts = unitCostsMain,
                                        utilityWeights = utilityWeightsMain)
 
@@ -362,7 +366,7 @@ for (pop.i in populationVector){
                                                        care_cascade = diabCareCascade,
                                                        ttt_list = list(popParamList), endyr = 2099)
   ### Calculate economic outcomes
-  tbICERs[["EffLow"]] <- generateICER(tempResSA[["EffLow"]] - baselineRes,
+  tbICERs[["EffLow"]] <- generateICER( baselineRes - tempResSA[["EffLow"]],
                                       UnitCosts = unitCostsMain,
                                       utilityWeights = utilityWeightsMain)
 
@@ -377,7 +381,7 @@ for (pop.i in populationVector){
                                                          ttt_list = list(popParamList), endyr = 2099)
 
   ### Calculate economic outcomes
-  tbICERs[["SensHigh"]] <- generateICER(tempResSA[["SensHigh"]] - baselineRes,
+  tbICERs[["SensHigh"]] <- generateICER(baselineRes-tempResSA[["SensHigh"]],
                                         UnitCosts = unitCostsMain,
                                         utilityWeights = utilityWeightsMain)
 
@@ -388,7 +392,7 @@ for (pop.i in populationVector){
                                                         ttt_list = list(popParamList), endyr = 2099)
 
   ### Calculate economic outcomes
-  tbICERs[["SensLow"]] <- generateICER(tempResSA[["SensLow"]]  - baselineRes,
+  tbICERs[["SensLow"]] <- generateICER(baselineRes - tempResSA[["SensLow"]],
                                        UnitCosts = unitCostsMain,
                                        utilityWeights = utilityWeightsMain)
 
@@ -402,7 +406,7 @@ for (pop.i in populationVector){
                                                           care_cascade = diabCareCascade,
                                                           ttt_list = list(popParamList), endyr = 2099)
   ### Calculate economic outcomes
-  tbICERs[["SpecHigh"]] <- generateICER(tempResSA[["SpecHigh"]] - baselineRes,
+  tbICERs[["SpecHigh"]] <- generateICER(baselineRes - tempResSA[["SpecHigh"]],
                                         UnitCosts = unitCostsMain,
                                         utilityWeights = utilityWeightsMain)
 
@@ -413,7 +417,7 @@ for (pop.i in populationVector){
                                                          ttt_list = list(popParamList), endyr = 2099)
 
   ### Calculate economic outcomes
-  tbICERs[["SpecLow"]] <- generateICER( tempResSA[["SpecLow"]]- baselineRes,
+  tbICERs[["SpecLow"]] <- generateICER(baselineRes - tempResSA[["SpecLow"]],
                                        UnitCosts = unitCostsMain,
                                        utilityWeights = utilityWeightsMain)
 
@@ -428,7 +432,7 @@ for (pop.i in populationVector){
                                                   ttt_list = list(popParamList), endyr = 2099)
 
   ### Calculate economic outcomes
-  tbICERs[["MortHigh"]] <- generateICER(tempResSA[["MortHigh"]] - baselineRes,
+  tbICERs[["MortHigh"]] <- generateICER(baselineRes - tempResSA[["MortHigh"]],
                                         UnitCosts = unitCostsMain,
                                         utilityWeights = utilityWeightsMain)
 
@@ -438,7 +442,7 @@ for (pop.i in populationVector){
                                                  care_cascade = diabCareCascade,
                                                  ttt_list = list(popParamList), endyr = 2099)
   ### Calculate economic outcomes
-  tbICERs[["MortLow"]] <- generateICER(tempResSA[["MortLow"]] - baselineRes,
+  tbICERs[["MortLow"]] <- generateICER(baselineRes - tempResSA[["MortLow"]],
                                        UnitCosts = unitCostsMain,
                                        utilityWeights = utilityWeightsMain)
 
@@ -453,7 +457,7 @@ for (pop.i in populationVector){
                                                   ttt_list = list(popParamList), endyr = 2099)
 
   ### Calculate economic outcomes
-  tbICERs[["ProgHigh"]] <- generateICER(tempResSA[["ProgHigh"]] - baselineRes,
+  tbICERs[["ProgHigh"]] <- generateICER(baselineRes - tempResSA[["ProgHigh"]],
                                         UnitCosts = unitCostsMain,
                                         utilityWeights = utilityWeightsMain)
 
@@ -464,7 +468,7 @@ for (pop.i in populationVector){
                                                  ttt_list = list(popParamList), endyr = 2099)
 
   ### Calculate economic outcomes
-  tbICERs[["ProgLow"]] <- generateICER(tempResSA[["ProgLow"]] - baselineRes,
+  tbICERs[["ProgLow"]] <- generateICER(baselineRes - tempResSA[["ProgLow"]],
                                        UnitCosts = unitCostsMain,
                                        utilityWeights = utilityWeightsMain)
 
@@ -478,7 +482,7 @@ for (pop.i in populationVector){
                                                   care_cascade = diabCareCascade,
                                                   ttt_list = list(popParamList), endyr = 2099)
   ### Calculate economic outcomes
-  tbICERs[["LtbiHigh"]] <- generateICER(tempResSA[["LtbiHigh"]] - baselineRes,
+  tbICERs[["LtbiHigh"]] <- generateICER(baselineRes - tempResSA[["LtbiHigh"]],
                                         UnitCosts = unitCostsMain,
                                         utilityWeights = utilityWeightsMain)
 
@@ -489,7 +493,7 @@ for (pop.i in populationVector){
                                                  ttt_list = list(popParamList), endyr = 2099)
 
   ### Calculate economic outcomes
-  tbICERs[["LtbiLow"]] <- generateICER(tempResSA[["LtbiLow"]] - baselineRes,
+  tbICERs[["LtbiLow"]] <- generateICER(baselineRes - tempResSA[["LtbiLow"]],
                                        UnitCosts = unitCostsMain,
                                        utilityWeights = utilityWeightsMain)
 
@@ -505,7 +509,7 @@ for (pop.i in populationVector){
   unitCosts['NoTBCost'] <- unitCostsMain['NoTBCost'] * 1.25
 
   ### Calculate economic outcomes
-  tbICERs[["LtbiTestCostHigh"]] <- generateICER(tempResSA[["Main"]] - baselineRes,
+  tbICERs[["LtbiTestCostHigh"]] <- generateICER(baselineRes - tempResSA[["Main"]],
                                                 UnitCosts = unitCosts,
                                                 utilityWeights = utilityWeightsMain)
 
@@ -514,21 +518,21 @@ for (pop.i in populationVector){
   unitCosts['NoTBCost'] <- unitCostsMain['NoTBCost'] * 0.75
 
   ### Calculate economic outcomes
-  tbICERs[["LtbiTestCostLow"]] <- generateICER(tempResSA[["Main"]]- baselineRes,
+  tbICERs[["LtbiTestCostLow"]] <- generateICER(baselineRes - tempResSA[["Main"]],
                                                UnitCosts = unitCosts,
                                                utilityWeights = utilityWeightsMain)
 
   ### Reset to main analysis level
   unitCosts <- unitCostsMain
 
-  ######## Total cost of TB treatment #########################################
+  ######## Total cost of LTBI treatment #########################################
   ### Update unit health costs for LTBI testing (upper bound)
   unitCosts['3HPCost'] <- unitCostsMain['3HPCost'] * 1.25
   unitCosts['4RCost'] <- unitCostsMain['4RCost'] * 1.25
   unitCosts['3HRCost'] <- unitCostsMain['3HRCost'] * 1.25
 
   ### Calculate economic outcomes
-  tbICERs[["LTBITxCostHigh"]] <- generateICER(tempResSA[["Main"]] - baselineRes,
+  tbICERs[["LTBITxCostHigh"]] <- generateICER( baselineRes - tempResSA[["Main"]] ,
                                             UnitCosts = unitCosts,
                                             utilityWeights = utilityWeightsMain)
 
@@ -538,7 +542,7 @@ for (pop.i in populationVector){
   unitCosts['3HRCost'] <- unitCostsMain['3HRCost'] * 0.75
 
   ### Calculate economic outcomes
-  tbICERs[["LTBITxCostLow"]] <- generateICER(tempResSA[["Main"]] - baselineRes,
+  tbICERs[["LTBITxCostLow"]] <- generateICER( baselineRes - tempResSA[["Main"]] ,
                                            UnitCosts = unitCosts,
                                            utilityWeights = utilityWeightsMain)
 
@@ -550,7 +554,7 @@ for (pop.i in populationVector){
   unitCosts['TBtx'] <- unitCostsMain['TBtx'] * 1.25
 
   ### Calculate economic outcomes
-  tbICERs[["TBTxCostHigh"]] <- generateICER( tempResSA[["Main"]] - baselineRes,
+  tbICERs[["TBTxCostHigh"]] <- generateICER(baselineRes - tempResSA[["Main"]] ,
                                             UnitCosts = unitCosts,
                                             utilityWeights = utilityWeightsMain)
 
@@ -558,7 +562,7 @@ for (pop.i in populationVector){
   unitCosts['TBtx'] <- unitCostsMain['TBtx'] * 0.75
 
   ### Calculate economic outcomes
-  tbICERs[["TBTxCostLow"]] <- generateICER(tempResSA[["Main"]] - baselineRes,
+  tbICERs[["TBTxCostLow"]] <- generateICER(baselineRes - tempResSA[["Main"]],
                                            UnitCosts = unitCosts,
                                            utilityWeights = utilityWeightsMain)
 
@@ -568,18 +572,18 @@ for (pop.i in populationVector){
   ######## Utility weights for LTBI testing with toxicity #####################
   ### Update utility weight for LTBI testing with toxicity (upper bound)
   utilityWeights <- utilityWeightsMain
-  utilityWeights[2] <- utilityWeightsMain[2] * 1.25
+  utilityWeights[2] <- utilityWeightsMain[2] * 0.75
 
   ### Calculate economic outcomes
-  tbICERs[["LtbiTxUWHigh"]] <- generateICER(baselineRes - tempResSA[["Main"]],
+  tbICERs[["LtbiTxUWHigh"]] <- generateICER(baselineRes - tempResSA[["Main"]] ,
                                             UnitCosts = unitCostsMain,
                                             utilityWeights = utilityWeights)
 
   ### Update utility weight for LTBI testing with toxicity (lower bound)
-  utilityWeights[2] <- utilityWeightsMain[2] * 0.75
+  utilityWeights[2] <- utilityWeightsMain[2] * 1.25
 
   ### Calculate economic outcomes
-  tbICERs[["LtbiTxUWLow"]] <- generateICER(baselineRes - tempResSA[["Main"]],
+  tbICERs[["LtbiTxUWLow"]] <- generateICER( baselineRes - tempResSA[["Main"]] ,
                                             UnitCosts = unitCostsMain,
                                             utilityWeights = utilityWeights)
 
@@ -588,21 +592,22 @@ for (pop.i in populationVector){
 
   ######## Utility weights for TB disease / treatment #####################
   ### Update utility weight (upper bound)
-  utilityWeights[3] <- 0.83
-  utilityWeights[4] <- 0.98
-
-  ### Calculate economic outcomes
-  tbICERs[["TBUwHigh"]] <- generateICER(baselineRes - tempResSA[["Main"]],
-                                         UnitCosts = unitCostsMain,
-                                         utilityWeights = utilityWeights)
-
-  ### Update utility weight (lower bound)
   utilityWeights[3] <- 0.64
   utilityWeights[4] <- 0.79
 
   ### Calculate economic outcomes
+  tbICERs[["TBUwHigh"]] <- generateICER( baselineRes - tempResSA[["Main"]] ,
+                                         UnitCosts = unitCostsMain,
+                                         utilityWeights = utilityWeights)
+
+  ### Update utility weight (lower bound)
+  utilityWeights[3] <- 0.83
+  utilityWeights[4] <- 0.98
+
+
+  ### Calculate economic outcomes
   ### Need to adjust the sign to calculate QALYs gained
-  tbICERs[["TBUwLow"]] <- generateICER(baselineRes - tempResSA[["Main"]],
+  tbICERs[["TBUwLow"]] <- generateICER(baselineRes - tempResSA[["Main"]] ,
                                         UnitCosts = unitCostsMain,
                                         utilityWeights = utilityWeights)
 
@@ -636,7 +641,7 @@ for (pop.i in populationVector){
                                                          tbICERs[["Main"]]["ICER (TB perspective)"] - tbICERs[["LtbiHigh"]]["ICER (TB perspective)"]),
                             check.names = FALSE)
 
-  rownames(differencesTbICERs) <- c("Lower bound", "Upper bound", "UB diff")
+  rownames(differencesTbICERs) <- c("lower bound", "upper bound", "UB diff")
 
   differencesTbICERs <- as.data.frame(t(differencesTbICERs))
   differencesTbICERs$Parameter <- rownames(differencesTbICERs)
@@ -652,7 +657,7 @@ for (pop.i in populationVector){
   ######## Reshape the data frame for ggplot and geom_rect ######################
   differencesTbICERs.2 <- differencesTbICERs %>%
     # gather columns Lower_Bound and Upper_Bound into a single column using gather
-    gather(key='type', value='outputValue', `Lower bound`:`Upper bound`) %>%
+    gather(key='type', value='outputValue', `lower bound`:`upper bound`) %>%
     # just reordering columns
     select(Parameter, type, outputValue, `UB diff`) %>%
     # create the columns for geom_rect
@@ -682,48 +687,6 @@ for (pop.i in populationVector){
   #####           Create a dataframe of the percent differences            ######
   ##############################################################################|
 
-  # percDiffsTbICERs <- data.frame("LTBI treatment\ncompletion" = c((tbICERs[["CompLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                        (tbICERs[["CompHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                        (tbICERs[["CompHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                  "LTBI treatment\ninitiation" = c((tbICERs[["InitLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                   (tbICERs[["InitHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                   (tbICERs[["InitHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                  "LTBI treatment\neffectiveness" = c((tbICERs[["EffLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                                 (tbICERs[["EffHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                                 (tbICERs[["EffHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                  "IGRA Sensitivity" = c((tbICERs[["SensLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                    (tbICERs[["SensHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                    (tbICERs[["SensHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                  "IGRA Specificity" = c((tbICERs[["SpecLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                    (tbICERs[["SpecHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                    (tbICERs[["SpecHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                  "Diabetes associated\nall-cause mortality" = c((tbICERs[["MortLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                  (tbICERs[["MortHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                  (tbICERs[["MortHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                  "TB progression" = c((tbICERs[["ProgLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                       (tbICERs[["ProgHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                       (tbICERs[["ProgHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                  "LTBI prevalence" = c((tbICERs[["LtbiLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                        (tbICERs[["LtbiHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                        (tbICERs[["LtbiHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                 "Total cost of\nLTBI testing" = c((tbICERs[["LtbiTestCostLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                      (tbICERs[["LtbiTestCostHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                      (tbICERs[["LtbiTestCostHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                "Average cost of\nLTBI treatment" = c((tbICERs[["LTBITxCostLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                                  (tbICERs[["LTBITxCostHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                                  (tbICERs[["LTBITxCostHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                "Cost of\nTB treatment" = c((tbICERs[["TBTxCostLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                                      (tbICERs[["TBTxCostHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                                      (tbICERs[["TBTxCostHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                "Utility weight LTBI" = c((tbICERs[["LtbiTxUWLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                            (tbICERs[["LtbiTxUWHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                            (tbICERs[["LtbiTxUWHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                "Utility weight TB" = c((tbICERs[["TBUwLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                           (tbICERs[["TBUwHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
-  #                                                           (tbICERs[["TBUwHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-  #                                  check.names = FALSE)
-
-
   percDiffsTbICERs <- data.frame("LTBI treatment\ncompletion" = c((tbICERs[["CompLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                                   (tbICERs[["CompHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                                   (tbICERs[["CompHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
@@ -733,10 +696,10 @@ for (pop.i in populationVector){
                                  "LTBI treatment\neffectiveness" = c((tbICERs[["EffLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                                      (tbICERs[["EffHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                                      (tbICERs[["EffHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-                                 "IGRA Sensitivity" = c((tbICERs[["SensLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
+                                 "IGRA sensitivity" = c((tbICERs[["SensLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                         (tbICERs[["SensHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                         (tbICERs[["SensHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-                                 "IGRA Specificity" = c((tbICERs[["SpecLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
+                                 "IGRA specificity" = c((tbICERs[["SpecLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                         (tbICERs[["SpecHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                         (tbICERs[["SpecHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
                                  "Diabetes associated\nall-cause mortality" = c((tbICERs[["MortLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
@@ -757,15 +720,17 @@ for (pop.i in populationVector){
                                  "Cost of\nTB treatment" = c((tbICERs[["TBTxCostLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                              (tbICERs[["TBTxCostHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                              (tbICERs[["TBTxCostHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-                                 "Utility weight LTBI" = c((tbICERs[["LtbiTxUWLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
+                                 "LTBI treatment disutility" = c((tbICERs[["LtbiTxUWLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                            (tbICERs[["LtbiTxUWHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                            (tbICERs[["LtbiTxUWHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
-                                 "Utility weight TB" = c((tbICERs[["TBUwLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
+                                 "TB disease disutility" = c((tbICERs[["TBUwLow"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                          (tbICERs[["TBUwHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"],
                                                          (tbICERs[["TBUwHigh"]]["ICER (TB perspective)"] - tbICERs[["Main"]]["ICER (TB perspective)"]) / tbICERs[["Main"]]["ICER (TB perspective)"]),
                                  check.names = FALSE)
 
-  rownames(percDiffsTbICERs) <- c("Lower bound", "Upper bound", "UB diff")
+  rownames(percDiffsTbICERs) <- c("lower bound", "upper bound", "UB diff")
+
+  percDiffsTbICERs["UB diff",] <- pmax(abs(percDiffsTbICERs["lower bound",]), abs(percDiffsTbICERs["upper bound",]))
 
   percDiffsTbICERs <- as.data.frame(t(percDiffsTbICERs))
   percDiffsTbICERs$Parameter <- rownames(percDiffsTbICERs)
@@ -781,7 +746,7 @@ for (pop.i in populationVector){
   ######## Reshape the data frame for ggplot and geom_rect ######################
   percDiffsTbICERs.2 <- percDiffsTbICERs %>%
     # gather columns Lower_Bound and Upper_Bound into a single column using gather
-    gather(key='type', value='outputValue', `Lower bound`:`Upper bound`) %>%
+    gather(key='type', value='outputValue', `lower bound`:`upper bound`) %>%
     # just reordering columns
     select(Parameter, type, outputValue, `UB diff`) %>%
     # create the columns for geom_rect
@@ -833,6 +798,139 @@ usbAsianPercDiffsIcers$Population <- rep("Asian", nrow(usbAsianPercDiffsIcers))
 usbPopsPercDiffsICERs <- rbind(usbHispPercDiffsIcers, usbAsianPercDiffsIcers)
 usbPopsPercDiffsICERs$Population <- as.factor(usbPopsPercDiffsICERs$Population)
 
+
+ltbiHighusbHispanic<- max(usbPopsPercDiffsICERs %>%
+                             filter(Population == "Hispanic",
+                                    Parameter == "LTBI prevalence") %>%
+                             select(ymax)) * 100
+
+ltbiHighusbAsian<- max(usbPopsPercDiffsICERs %>%
+                            filter(Population == "Asian",
+                                   Parameter == "LTBI prevalence") %>%
+                            select(ymax)) * 100
+
+usbPopsPercDiffsICERsCeiling <- usbPopsPercDiffsICERs
+usbPopsPercDiffsICERsCeiling[which(usbPopsPercDiffsICERsCeiling$ymax > 1),"ymax"] <- 1
+
+
+ggplot() +
+  geom_point(data = nusbPopsPercDiffsICERs %>% filter(ymax != 0, Population == "Asian"),
+             aes(y=ymax, x=xmax * .985, color=type, shape = Population), size = 6) +
+  geom_point(data = nusbPopsPercDiffsICERs%>% filter(ymax != 0, Population == "Hispanic"),
+             aes(y=ymax, x=xmin*1.015, color=type, shape = Population), size = 6) +
+  geom_point(data = nusbPopsPercDiffsICERs %>% filter(ymin != 0, Population == "Asian"),
+             aes(y=ymin, x=xmax *.985, color=type, shape = Population), size = 6) +
+  geom_point(data = nusbPopsPercDiffsICERs %>% filter(ymin != 0, Population == "Hispanic"),
+             aes(y=ymin, x=xmin*1.015, color=type, shape = Population), size = 6) +
+  geom_point(data = nusbPopsPercDiffsICERs %>% filter(ymax != 0, Population == "Asian"),
+             aes(y=ymax, x=xmax* .985), size = 6, color = "black", shape =1) +
+  geom_point(data = nusbPopsPercDiffsICERs %>% filter(ymax != 0, Population == "Hispanic"),
+             aes(y=ymax, x=xmin*1.015), size = 6, shape =2, color = "black") +
+  geom_point(data = nusbPopsPercDiffsICERs %>% filter(ymin != 0, Population == "Asian"),
+             aes(y=ymin, x=xmax* .985), size = 6, shape =1, color = "black") +
+  geom_point(data = nusbPopsPercDiffsICERs %>% filter(ymin != 0, Population == "Hispanic"),
+             aes(y=ymin, x=xmin*1.015), size = 6, shape =2, color = "black") +
+  theme_minimal(base_size = 21) +
+  theme(axis.title.y=element_blank(), legend.position = 'bottom',
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_hline(yintercept = baseValue) +
+  scale_x_continuous(breaks = c(1:length(order.parameters)),
+                     labels = order.parameters) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip() + expand_limits(y =c(-.5,1.25)) +
+  ylab("Percentage change in ICER")  + #guides(fill="legend") +
+  scale_color_manual(values = pal, guide = "legend") +
+  ggtitle("non-U.S.-born populations")
+
+ggplot() +
+  geom_point(data = usbPopsPercDiffsICERsCeiling %>% filter(ymax != 0, Population == "Asian"),
+             aes(y=ymax, x=xmax * .985, color=type, shape = Population), size = 6) +
+  geom_point(data = usbPopsPercDiffsICERsCeiling%>% filter(ymax != 0, Population == "Hispanic"),
+             aes(y=ymax, x=xmin*1.015, color=type, shape = Population), size = 6) +
+  geom_point(data = usbPopsPercDiffsICERsCeiling %>% filter(ymin != 0, Population == "Asian"),
+             aes(y=ymin, x=xmax *.985, color=type, shape = Population), size = 6) +
+  geom_point(data = usbPopsPercDiffsICERsCeiling%>% filter(ymin != 0, Population == "Hispanic"),
+             aes(y=ymin, x=xmin*1.015, color=type, shape = Population), size = 6) +
+  geom_point(data = usbPopsPercDiffsICERsCeiling %>% filter(ymax != 0, Population == "Asian"),
+             aes(y=ymax, x=xmax* .985), size = 6, color = "black", shape =1) +
+  geom_point(data = usbPopsPercDiffsICERsCeiling %>% filter(ymax != 0, Population == "Hispanic"),
+             aes(y=ymax, x=xmin*1.015), size = 6, shape =2, color = "black") +
+  geom_point(data = usbPopsPercDiffsICERsCeiling %>% filter(ymin != 0, Population == "Asian"),
+             aes(y=ymin, x=xmax* .985), size = 6, shape =1, color = "black") +
+  geom_point(data = usbPopsPercDiffsICERsCeiling %>% filter(ymin != 0, Population == "Hispanic"),
+             aes(y=ymin, x=xmin*1.015), size = 6, shape =2, color = "black") +
+  theme_minimal(base_size = 21) +
+  theme(axis.title.y=element_blank(), legend.position = 'bottom',
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_hline(yintercept = baseValue) +
+  scale_x_continuous(breaks = c(1:length(order.parameters)),
+                     labels = order.parameters) +
+  annotate("text", x = usbPopsPercDiffsICERsCeiling[which(usbPopsPercDiffsICERsCeiling$ymax == 1),"xmax"] -.8,
+           y = 1.17, label=paste("*Hispanic:", round(ltbiHighusbHispanic), "%"),
+           size = 6) +
+  annotate("text", x = usbPopsPercDiffsICERsCeiling[which(usbPopsPercDiffsICERsCeiling$ymax == 1),"xmax"] -.2,
+           y = 1.17, label=paste("*Asian:", round(ltbiHighusbAsian), "%"),
+           size = 6) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip() + expand_limits(y =c(-.5,1.25)) +
+  ylab("Percentage change in ICER") +
+  scale_color_manual(values = pal, guide = "legend") +
+  ggtitle("U.S.-born populations")
+
+ggplot() +
+  geom_rect(data = nusbPopsPercDiffsICERs %>% filter(Population == "Asian"),
+            aes(ymax=ymax, ymin=ymin, xmax=(xmax + xmin)/2, xmin=xmin, fill=interaction(Population, type, sep = " ")), color = "black") +
+  geom_rect(data = nusbPopsPercDiffsICERs %>% filter(Population == "Hispanic"),
+            aes(ymax=ymax, ymin=ymin, xmax=xmax, xmin=(xmax + xmin)/2, fill=interaction(Population, type, sep = " ")), color = "black") +
+  theme_minimal(base_size = 21) +
+  theme(axis.title.y=element_blank(), legend.position = 'bottom',
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_hline(yintercept = baseValue) +
+  scale_x_continuous(breaks = c(1:length(order.parameters)),
+                     labels = order.parameters) +
+  scale_y_continuous(labels = scales::percent) +
+  expand_limits(y =c(-.5,1.15)) +
+  coord_flip() +
+  ylab("Percentage change in ICER") +
+  scale_fill_manual(values = gradientPal) +
+  scale_shape_manual(values=c(21,24))+
+  ggtitle("non-U.S.-born populations")
+
+
+ggplot() +
+  geom_rect(data = usbPopsPercDiffsICERsCeiling %>% filter(Population == "Asian"),
+            aes(ymax=ymax, ymin=ymin, xmax=(xmax + xmin)/2, xmin=xmin, fill=interaction(Population, type, sep = " ")), color = "black") +
+  geom_rect(data = usbPopsPercDiffsICERsCeiling %>% filter(Population == "Hispanic"),
+            aes(ymax=ymax, ymin=ymin, xmax=xmax, xmin=(xmax + xmin)/2, fill=interaction(Population, type, sep = " ")), color = "black") +
+  theme_minimal(base_size = 21) +
+  theme(axis.title.y=element_blank(), legend.position = 'bottom',
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_hline(yintercept = baseValue) +
+  expand_limits(y =c(-.5,1.15)) +
+  annotate("text", x = usbPopsPercDiffsICERsCeiling[which(usbPopsPercDiffsICERsCeiling$ymax == 1),"xmax"] -.2,
+           y = 1.12, label=paste("*Hispanic:", round(ltbiHighusbHispanic), "%"),
+           size = 5.5) +
+  annotate("text", x = usbPopsPercDiffsICERsCeiling[which(usbPopsPercDiffsICERsCeiling$ymax == 1),"xmax"] -.8,
+           y = 1.1, label=paste("*Asian:", round(ltbiHighusbAsian), "%"),
+           size = 5.5) +
+  scale_x_continuous(breaks = c(1:length(order.parameters)),
+                     labels = order.parameters) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip() +
+  ylab("Percentage change in ICER") +
+  scale_fill_manual(values = gradientPal) +
+  scale_shape_manual(values=c(21,24))+
+  ggtitle("U.S.-born populations")
+
+
+
+
+###############################################################################
+
 ggplot() +
   geom_rect(data = nusbPopsPercDiffsICERs %>% filter(Population == "Asian"),
             aes(ymax=ymax, ymin=ymin, xmax=xmax, xmin=xmin, fill=type), color = "black") +
@@ -860,19 +958,33 @@ ggplot() +
   scale_x_continuous(breaks = c(1:length(order.parameters)),
                      labels = order.parameters) +
   scale_y_continuous(labels = scales::percent) +
-  coord_flip() +
+  coord_flip() + expand_limits(y =c(-.45,1.1)) +
   ylab("Percentage change in ICER") +
   scale_fill_manual(values = gradientPal) +
   ggtitle("non-U.S.-born Hispanic population")
 
+ltbiHighusbAsian <- max(usbPopsPercDiffsICERs %>%
+                         filter(Population == "Asian",
+                                Parameter == "LTBI prevalence") %>%
+                         select(ymax)) * 100
+
+
+usbPopsPercDiffsICERsCeilingAsian <- usbPopsPercDiffsICERs %>%
+                                     filter(Population == "Asian")
+
+usbPopsPercDiffsICERsCeilingAsian[which(usbPopsPercDiffsICERsCeilingAsian$ymax > 1),"ymax"] <- 1
+
 ggplot() +
-  geom_rect(data = usbPopsPercDiffsICERs %>% filter(Population == "Asian"),
+  geom_rect(data = usbPopsPercDiffsICERsCeilingAsian,
             aes(ymax=ymax, ymin=ymin, xmax=xmax, xmin=xmin, fill=type), color = "black") +
   theme_minimal(base_size = 16) +
   theme(axis.title.y=element_blank(), legend.position = 'bottom',
         legend.title = element_blank(),
         panel.grid.minor = element_blank()) +
   geom_hline(yintercept = baseValue) +
+  annotate("text", x = usbPopsPercDiffsICERsCeilingAsian[which(usbPopsPercDiffsICERsCeilingAsian$ymax == 1),"xmax"] -.3,
+            y = 1.08, label=paste("*", round(ltbiHighusbAsian), "%"),
+           size = 6) +
   scale_x_continuous(breaks = c(1:length(order.parameters)),
                      labels = order.parameters) +
   scale_y_continuous(labels = scales::percent) +
@@ -881,10 +993,23 @@ ggplot() +
   scale_fill_manual(values = gradientPal) +
   ggtitle("U.S.-born Asian population")
 
+ltbiHighusbHispanic <- max(usbPopsPercDiffsICERs %>%
+                         filter(Population == "Hispanic",
+                                Parameter == "LTBI prevalence") %>%
+                         select(ymax)) * 100
+
+usbPopsPercDiffsICERsCeilingHispanic <- usbPopsPercDiffsICERs %>%
+  filter(Population == "Hispanic")
+
+usbPopsPercDiffsICERsCeilingHispanic[which(usbPopsPercDiffsICERsCeilingHispanic$ymax > 1),"ymax"] <- 1
+
 ggplot() +
-  geom_rect(data = usbPopsPercDiffsICERs %>% filter(Population == "Hispanic"),
+  geom_rect(data = usbPopsPercDiffsICERsCeilingHispanic,
             aes(ymax=ymax, ymin=ymin, xmax=xmax, xmin=xmin, fill=type), color = "black") +
   theme_minimal(base_size = 16) +
+  annotate("text", x = usbPopsPercDiffsICERsCeilingHispanic[which(usbPopsPercDiffsICERsCeilingHispanic$ymax == 1),"xmax"] -.3,
+           y = 1.08, label=paste("*", round(ltbiHighusbHispanic), "%"),
+           size = 6) +
   theme(axis.title.y=element_blank(), legend.position = 'bottom',
         legend.title = element_blank(),
         panel.grid.minor = element_blank()) +
