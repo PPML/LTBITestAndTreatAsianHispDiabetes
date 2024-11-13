@@ -34,7 +34,6 @@ generateICER <- function(results,
                                             check.names = FALSE)
 
     ##### LTBI treatment initiations
-
     ageLTBITxIndex <- grep("N_LtbiTxInits_", colnames(results))
 
     ltbiTxInitAgeAnnual <- data.frame("Year" = 1950:2099,
@@ -87,21 +86,25 @@ generateICER <- function(results,
                                                 UnitCosts = UnitCosts)
 
     ### QALYs
-    QALYS <- calculateQALYs(TbCases = casesAgeAnnual[yearIndex,-c(1:2)],
-                                     TbDeaths = deathsAgeAnnual[yearIndex,-c(1:2)],
-                                     LtbiTxInits = ltbiTxInitAgeAnnual[yearIndex,-c(1:2)],
-                                     discount = 0,
-                                     Ages = "AgeGroups",
-                                     StartYear = 2024,
-                                     uncertainty = FALSE,
-                                     utilityWeights = utilityWeights)
+    QALYS <- calculateQALYs(TbCases = casesAgeAnnual[yearIndex,-c(1:2)] * -1,
+                             TbDeaths = deathsAgeAnnual[yearIndex,-c(1:2)] * -1,
+                             LtbiTxInits = ltbiTxInitAgeAnnual[yearIndex,-c(1:2)] * -1,
+                             discount = 0,
+                             Ages = "AgeGroups",
+                             StartYear = 2024,
+                             uncertainty = FALSE,
+                             popLifeExpRed = 0.12,
+                             popUtilWgtRed = 0.79,
+                             utilityWeights = utilityWeights)
 
-    discount_QALYS <- calculateQALYs(TbCases = casesAgeAnnual[yearIndex,-c(1:2)],
-                                     TbDeaths = deathsAgeAnnual[yearIndex,-c(1:2)],
-                                     LtbiTxInits = ltbiTxInitAgeAnnual[yearIndex,-c(1:2)],
+    discount_QALYS <- calculateQALYs(TbCases = casesAgeAnnual[yearIndex,-c(1:2)] * - 1,
+                                     TbDeaths = deathsAgeAnnual[yearIndex,-c(1:2)] * - 1,
+                                     LtbiTxInits = ltbiTxInitAgeAnnual[yearIndex,-c(1:2)] * - 1,
                                      discount = 0.03,
                                      Ages = "AgeGroups",
                                      StartYear = 2024,
+                                     popLifeExpRed = 0.12,
+                                     popUtilWgtRed = 0.79,
                                      uncertainty = FALSE,
                                      utilityWeights = utilityWeights)
 
@@ -113,15 +116,15 @@ generateICER <- function(results,
                       "Discount QALYs" = sum(discount_QALYS[[4]])*1e6,
                       "Life years" = sum(QALYS[[3]])*1e6,
                       "Discount life years" = sum(discount_QALYS[[3]])*1e6,
-                      "TB health costs" = sum(HealthCosts[[1]], HealthCosts[[2]])*1e6,
-                      "Discount TB health costs" = sum(discount_HealthCosts[[1]], discount_HealthCosts[[2]])*1e6,
-                      "ICER (TB perspective)" = sum(discount_HealthCosts[[1]], discount_HealthCosts[[2]]) / sum(discount_QALYS[[4]]),
-                      "Health costs" = sum(HealthCosts[[4]])*1e6,
-                      "Discount health costs" = sum(discount_HealthCosts[[4]])*1e6,
-                      "ICER (Health service perspective)" = sum(discount_HealthCosts[[4]]) / sum(discount_QALYS[[4]]),
+                      "TB health costs" = sum(HealthCosts[[1]], HealthCosts[[2]], HealthCosts[[3]])*1e6,
+                      "Discount TB health costs" = sum(discount_HealthCosts[[1]], discount_HealthCosts[[2]], discount_HealthCosts[[3]])*1e6,
+                      "ICER (TB perspective)" = sum(discount_HealthCosts[[1]], discount_HealthCosts[[2]], discount_HealthCosts[[3]]) / sum(discount_QALYS[[4]]),
+                      "Health costs" = sum(HealthCosts[[5]])*1e6,
+                      "Discount health costs" = sum(discount_HealthCosts[[5]])*1e6,
+                      "ICER (Health service perspective)" = sum(discount_HealthCosts[[5]]) / sum(discount_QALYS[[4]]),
                       "Productivity costs" = sum(ProdCosts[[4]])*1e6,
                       "Discount productivity costs" = sum(discount_ProdCosts[[4]])*1e6,
-                      "ICER (Societal perspective)" = sum(discount_ProdCosts[[4]]) / sum(discount_QALYS[[4]])
+                      "ICER (Societal perspective)" = (sum(discount_ProdCosts[[4]]) + sum(discount_HealthCosts[[5]])) / sum(discount_QALYS[[4]])
     )
     return(econResults)
 }
